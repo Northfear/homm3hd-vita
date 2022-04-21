@@ -30,6 +30,9 @@ target_link_libraries(HOMM3.elf
   SDL2_mixer
   SDL2_image
   SDL2
+  vitaGL
+  vitashark
+  mathneon
   vorbis
   ogg
   vorbisfile
@@ -40,9 +43,6 @@ target_link_libraries(HOMM3.elf
   jpeg
   png
   webp
-  libGLESv2_stub
-  libgpu_es4_ext_stub
-  libIMGEGL_stub
   m
   z
   kubridge_stub
@@ -61,6 +61,7 @@ target_link_libraries(HOMM3.elf
   SceTouch_stub
   SceMotion_stub
   SceVshBridge_stub
+  SceShaccCg_stub
 )
 
 vita_create_self(eboot.bin HOMM3.elf UNSAFE)

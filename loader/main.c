@@ -24,7 +24,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
-#include <GLES2/gl2.h>
+#include <vitaGL.h>
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
 #include <theora/theoradec.h>
@@ -398,6 +398,10 @@ int alphasort(const struct dirent **a, const struct dirent **b)
   return 0;
 }
 */
+
+void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
+{
+}
 
 char *SDL_AndroidGetExternalStoragePath()
 {
