@@ -36,13 +36,11 @@
 #include "config.h"
 #include "dialog.h"
 #include "so_util.h"
-#include "sfp2hfp.h"
 
 #define printf sceClibPrintf
 
 
-int _newlib_heap_size_user = 160 * 1024 * 1024;
-unsigned int sceLibcHeapSize = 160 * 1024 * 1024;
+int _newlib_heap_size_user = 224 * 1024 * 1024;
 
 so_module homm3_mod;
 
@@ -401,6 +399,9 @@ int alphasort(const struct dirent **a, const struct dirent **b)
 
 void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
 {
+  // fake GL_RENDERBUFFER_DEPTH_SIZE (?) to avoid assert
+  sceClibPrintf("glGetRenderbufferParameteriv   target: %d   pname: %d\n", target, pname);
+  *params = 1;
 }
 
 char *SDL_AndroidGetExternalStoragePath()
@@ -491,13 +492,13 @@ static so_default_dynlib default_dynlib[] = {
   { "abort", (uintptr_t)&abort },
   { "access", (uintptr_t)&access },
   { "alphasort", (uintptr_t)&alphasort },
-  { "atan", (uintptr_t)&atan_sfp },
-  { "atan2", (uintptr_t)&atan2_sfp },
+  { "atan", (uintptr_t)&atan },
+  { "atan2", (uintptr_t)&atan2 },
   { "atoi", (uintptr_t)&atoi },
-  { "ceil", (uintptr_t)&ceil_sfp },
+  { "ceil", (uintptr_t)&ceil },
   { "close", (uintptr_t)&close },
   { "compress2", (uintptr_t)&compress2 },
-  { "cosf", (uintptr_t)&cosf_sfp },
+  { "cosf", (uintptr_t)&cosf },
   { "crc32", (uintptr_t)&crc32 },
   { "dlclose", (uintptr_t)&ret1 },
   { "dlopen", (uintptr_t)&ret1 },
@@ -507,7 +508,7 @@ static so_default_dynlib default_dynlib[] = {
   { "fcntl", (uintptr_t)&fcntl },
   { "fflush", (uintptr_t)&fflush },
   { "fgetpos", (uintptr_t)&fgetpos },
-  { "fmod", (uintptr_t)&fmod_sfp },
+  { "fmod", (uintptr_t)&fmod },
   { "fopen", (uintptr_t)&fopen },
   { "fprintf", (uintptr_t)&fprintf },
   { "fread", (uintptr_t)&fread },
@@ -525,7 +526,7 @@ static so_default_dynlib default_dynlib[] = {
   { "glBindTexture", (uintptr_t)&glBindTexture },
   { "glBlendFuncSeparate", (uintptr_t)&glBlendFuncSeparate },
   { "glClear", (uintptr_t)&glClear },
-  { "glClearDepthf", (uintptr_t)&glClearDepthf_sfp },
+  { "glClearDepthf", (uintptr_t)&glClearDepthf },
   { "glCompileShader", (uintptr_t)&glCompileShader },
   { "glCompressedTexImage2D", (uintptr_t)&glCompressedTexImage2D },
   { "glCreateProgram", (uintptr_t)&glCreateProgram },
@@ -534,7 +535,7 @@ static so_default_dynlib default_dynlib[] = {
   { "glDeleteTextures", (uintptr_t)&glDeleteTextures },
   { "glDepthFunc", (uintptr_t)&glDepthFunc },
   { "glDepthMask", (uintptr_t)&glDepthMask },
-  { "glDepthRangef", (uintptr_t)&glDepthRangef_sfp },
+  { "glDepthRangef", (uintptr_t)&glDepthRangef },
   { "glDisable", (uintptr_t)&glDisable },
   { "glDisableVertexAttribArray", (uintptr_t)&glDisableVertexAttribArray },
   { "glDrawArrays", (uintptr_t)&glDrawArrays },
@@ -560,13 +561,13 @@ static so_default_dynlib default_dynlib[] = {
   { "glScissor", (uintptr_t)&glScissor },
   { "glShaderSource", (uintptr_t)&glShaderSource },
   { "glTexImage2D", (uintptr_t)&glTexImage2D },
-  { "glTexParameterf", (uintptr_t)&glTexParameterf_sfp },
+  { "glTexParameterf", (uintptr_t)&glTexParameterf },
   { "glTexParameteri", (uintptr_t)&glTexParameteri },
-  { "glUniform1f", (uintptr_t)&glUniform1f_sfp },
+  { "glUniform1f", (uintptr_t)&glUniform1f },
   { "glUniform1i", (uintptr_t)&glUniform1i },
-  { "glUniform2f", (uintptr_t)&glUniform2f_sfp },
-  { "glUniform3f", (uintptr_t)&glUniform3f_sfp },
-  { "glUniform4f", (uintptr_t)&glUniform4f_sfp },
+  { "glUniform2f", (uintptr_t)&glUniform2f },
+  { "glUniform3f", (uintptr_t)&glUniform3f },
+  { "glUniform4f", (uintptr_t)&glUniform4f },
   { "glUseProgram", (uintptr_t)&glUseProgram },
   { "glVertexAttribPointer", (uintptr_t)&glVertexAttribPointer },
   { "gzclose", (uintptr_t)&gzclose },
@@ -740,7 +741,7 @@ static so_default_dynlib default_dynlib[] = {
   { "SDL_WaitThread", (uintptr_t)&SDL_WaitThread },
   { "setlocale", (uintptr_t)&setlocale },
   { "setvbuf", (uintptr_t)&setvbuf },
-  { "sinf", (uintptr_t)&sinf_sfp },
+  { "sinf", (uintptr_t)&sinf },
   { "snprintf", (uintptr_t)&snprintf },
   { "sprintf", (uintptr_t)&sprintf },
   { "srand48", (uintptr_t)&srand48 },
@@ -769,7 +770,7 @@ static so_default_dynlib default_dynlib[] = {
   { "th_decode_headerin", (uintptr_t)&th_decode_headerin },
   { "th_decode_packetin", (uintptr_t)&th_decode_packetin },
   { "th_decode_ycbcr_out", (uintptr_t)&th_decode_ycbcr_out },
-  { "th_granule_time", (uintptr_t)&th_granule_time_sfp },
+  { "th_granule_time", (uintptr_t)&th_granule_time },
   { "th_info_clear", (uintptr_t)&th_info_clear },
   { "th_info_init", (uintptr_t)&th_info_init },
   { "th_setup_free", (uintptr_t)&th_setup_free },
@@ -787,7 +788,7 @@ static so_default_dynlib default_dynlib[] = {
   { "vorbis_comment_clear", (uintptr_t)&vorbis_comment_clear },
   { "vorbis_comment_init", (uintptr_t)&vorbis_comment_init },
   { "vorbis_dsp_clear", (uintptr_t)&vorbis_dsp_clear },
-  { "vorbis_granule_time", (uintptr_t)&vorbis_granule_time_sfp },
+  { "vorbis_granule_time", (uintptr_t)&vorbis_granule_time },
   { "vorbis_info_clear", (uintptr_t)&vorbis_info_clear },
   { "vorbis_info_init", (uintptr_t)&vorbis_info_init },
   { "vorbis_synthesis", (uintptr_t)&vorbis_synthesis },
@@ -813,6 +814,8 @@ int check_kubridge(void) {
 
 
 int main(int argc, char *argv[]) {
+  sceSysmoduleLoadModule(9);
+
   scePowerSetArmClockFrequency(444);
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);

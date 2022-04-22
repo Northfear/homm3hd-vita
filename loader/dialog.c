@@ -10,6 +10,7 @@
 #include <psp2/ctrl.h>
 #include <psp2/ime_dialog.h>
 #include <psp2/message_dialog.h>
+#include <vitaGL.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -130,6 +131,13 @@ void fatal_error(const char *fmt, ...) {
   va_start(list, fmt);
   vsnprintf(string, sizeof(string), fmt, list);
   va_end(list);
+
+  vglInit(0);
+
+  init_msg_dialog(string);
+
+  while (!get_msg_dialog_result())
+    vglSwapBuffers(GL_TRUE);
 
   sceKernelExitProcess(0);
   while (1);
