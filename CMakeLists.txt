@@ -26,7 +26,6 @@ add_executable(HOMM3.elf
 
 target_link_libraries(HOMM3.elf
   -Wl,--whole-archive pthread -Wl,--no-whole-archive
-  stdc++
   SDL2_mixer
   SDL2_image
   SDL2
@@ -36,6 +35,7 @@ target_link_libraries(HOMM3.elf
   FLAC
   mikmod
   mpg123
+  modplug
   theora
   jpeg
   png
@@ -45,6 +45,7 @@ target_link_libraries(HOMM3.elf
   libIMGEGL_stub
   m
   z
+  stdc++
   kubridge_stub
   SceAppMgr_stub
   SceAudio_stub
