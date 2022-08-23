@@ -133,7 +133,8 @@ void fatal_error(const char *fmt, ...) {
   va_end(list);
 
   vglInit(0);
-
+  
+  printf(string);
   init_msg_dialog(string);
 
   while (!get_msg_dialog_result())

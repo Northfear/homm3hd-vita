@@ -26,17 +26,18 @@ add_executable(HOMM3.elf
 
 target_link_libraries(HOMM3.elf
   -Wl,--whole-archive pthread -Wl,--no-whole-archive
-  stdc++
   SDL2_mixer
   SDL2_image
   SDL2
   vitaGL
   vitashark
+  SceShaccCgExt
   mathneon
   vorbis
   ogg
   vorbisfile
   FLAC
+  modplug
   mikmod
   mpg123
   theora
@@ -45,6 +46,8 @@ target_link_libraries(HOMM3.elf
   webp
   m
   z
+  stdc++
+  taihen_stub
   kubridge_stub
   SceAppMgr_stub
   SceAudio_stub
