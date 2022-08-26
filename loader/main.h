@@ -13,7 +13,7 @@ int ret0();
 
 int sceKernelChangeThreadCpuAffinityMask(SceUID thid, int cpuAffinityMask);
 
-SceUID _vshKernelSearchModuleByName(const char *, int *);
+SceUID _vshKernelSearchModuleByName(const char *, const void *);
 
 extern SceTouchPanelInfo panelInfoFront, panelInfoBack;
 
