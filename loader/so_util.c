@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
-#include "dialog.h"
+#include "utils/dialog.h"
+#include "utils/utils.h"
 #include "so_util.h"
 
 #ifndef SCE_KERNEL_MEMBLOCK_TYPE_USER_RX

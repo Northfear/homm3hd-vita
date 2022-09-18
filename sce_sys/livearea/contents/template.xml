@@ -8,5 +8,14 @@
 	<gate>
 		<startup-image>startup.png</startup-image>
 	</gate>
-	
+
+	<frame id="frame4">
+		<liveitem>
+			<target>psla:-config</target>
+			<text align="center" text-align="center" word-wrap="off" ellipsis="on">
+				<str size="24" color="#ffffff" shadow="on">CHANGE LANGUAGE</str>
+			</text>
+		</liveitem>
+	</frame>
+
 </livearea>

@@ -15,57 +15,89 @@ set(VITA_TITLEID  "HOMM00003")
 set(VITA_VERSION  "01.00")
 set(VITA_MKSFOEX_FLAGS "-d ATTRIBUTE2=12")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wl,-q,--wrap,memcpy,--wrap,memmove,--wrap,memset -D_GNU_SOURCE -Wall -O3 -mfloat-abi=softfp")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -mfloat-abi=hard -Wno-strict-aliasing \
+                  -Wl,-q,--wrap,memcpy,--wrap,memmove,--wrap,memset,--wrap,free,--wrap,malloc,--wrap,calloc,--wrap,realloc,--wrap,memalign")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11")
 
 add_executable(HOMM3.elf
   loader/main.c
-  loader/dialog.c
   loader/so_util.c
+  loader/reimpl/memory.c
+  loader/reimpl/pthr.c
+  loader/reimpl/other.c
+  loader/utils/dialog.c
+  loader/utils/gxm_dialog.c
+  loader/utils/utils.c
+)
+
+target_include_directories(HOMM3.elf
+  PUBLIC ${CMAKE_SOURCE_DIR}/loader
 )
 
 target_link_libraries(HOMM3.elf
-  -Wl,--whole-archive pthread -Wl,--no-whole-archive
+  pthread
   SDL2_mixer
   SDL2_image
   SDL2
-  vitaGL
-  vitashark
-  SceShaccCgExt
-  mathneon
   vorbis
   ogg
   vorbisfile
   FLAC
-  modplug
   mikmod
   mpg123
+  modplug
   theora
   jpeg
   png
   webp
+  libGLESv2_stub
+  libgpu_es4_ext_stub
+  libIMGEGL_stub
   m
   z
   stdc++
-  taihen_stub
   kubridge_stub
   SceAppMgr_stub
+  SceAppUtil_stub
   SceAudio_stub
   SceAudioIn_stub
   SceCtrl_stub
   SceCommonDialog_stub
   SceDisplay_stub
   SceIme_stub
-  SceKernelDmacMgr_stub
   SceGxm_stub
   SceHid_stub
-  SceSysmodule_stub
   ScePower_stub
   SceTouch_stub
   SceMotion_stub
   SceVshBridge_stub
-  SceShaccCg_stub
 )
+
+add_executable(config
+  config/main.cpp
+)
+
+target_link_libraries(config
+  imgui
+  vitaGL
+  vitashark
+  SceShaccCgExt
+  m
+  mathneon
+  taihen_stub
+  SceAppMgr_stub
+  SceAudio_stub
+  SceCtrl_stub
+  SceCommonDialog_stub
+  SceDisplay_stub
+  SceKernelDmacMgr_stub
+  SceGxm_stub
+  SceShaccCg_stub
+  SceTouch_stub
+  SceVshBridge_stub
+)
+
+vita_create_self(config.bin config UNSAFE)
 
 vita_create_self(eboot.bin HOMM3.elf UNSAFE)
 vita_create_vpk(HOMM3.vpk ${VITA_TITLEID} eboot.bin
@@ -76,4 +108,9 @@ vita_create_vpk(HOMM3.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
        ${CMAKE_SOURCE_DIR}/sce_sys/livearea/contents/bg0.png sce_sys/livearea/contents/bg0.png
        ${CMAKE_SOURCE_DIR}/sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
+       ${CMAKE_SOURCE_DIR}/module/libGLESv2.suprx module/libGLESv2.suprx
+       ${CMAKE_SOURCE_DIR}/module/libgpu_es4_ext.suprx module/libgpu_es4_ext.suprx
+       ${CMAKE_SOURCE_DIR}/module/libIMGEGL.suprx module/libIMGEGL.suprx
+       ${CMAKE_SOURCE_DIR}/module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
+       ${CMAKE_BINARY_DIR}/config.bin config.bin
 )
