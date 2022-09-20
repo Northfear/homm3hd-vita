@@ -56,6 +56,7 @@ target_link_libraries(HOMM3.elf
   m
   z
   stdc++
+  taihen_stub
   kubridge_stub
   SceAppMgr_stub
   SceAppUtil_stub
@@ -112,5 +113,6 @@ vita_create_vpk(HOMM3.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/module/libgpu_es4_ext.suprx module/libgpu_es4_ext.suprx
        ${CMAKE_SOURCE_DIR}/module/libIMGEGL.suprx module/libIMGEGL.suprx
        ${CMAKE_SOURCE_DIR}/module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
+       ${CMAKE_SOURCE_DIR}/module/libgpu_es4_kernel_ext.skprx module/libgpu_es4_kernel_ext.skprx
        ${CMAKE_BINARY_DIR}/config.bin config.bin
 )

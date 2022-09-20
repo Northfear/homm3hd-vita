@@ -7,6 +7,8 @@
  * of the MIT license.  See the LICENSE file for details.
  */
 
+#include <taihen.h>
+
 #include <psp2/appmgr.h>
 #include <psp2/power.h>
 #include <psp2/io/fcntl.h>
@@ -589,7 +591,11 @@ int main(int argc, char *argv[])
 
 	if (check_module("libgpu_es4_kernel_ext") < 0)
 	{
-		show_message("WARNING!\nlibgpu_es4_kernel_ext.skprx plugin is not installed!\nVideo playback is disabled. Game WILL have some visual bugs without it.\nDetails: https://github.com/Northfear/homm3hd-vita");
+		SceUID mod_id = -1;
+		mod_id = taiLoadStartKernelModule(APP_PATH "module/libgpu_es4_kernel_ext.skprx", 0, NULL, 0);
+		if (mod_id < 0) {
+			show_message("WARNING!\nlibgpu_es4_kernel_ext.skprx plugin is not installed!\nVideo playback is disabled. Game WILL have some visual bugs without it.");
+		}
 	}
 
 	if (so_file_load(&homm3_mod, SO_PATH, LOAD_ADDRESS) < 0)

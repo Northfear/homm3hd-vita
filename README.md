@@ -20,16 +20,17 @@ The port has been tested only with the latest available version of the game (whi
 
 In order to properly install the game, you'll have to follow these steps precisely:
 
-- Install [kubridge](https://github.com/TheOfficialFloW/kubridge/releases/), [FdFix](https://github.com/TheOfficialFloW/FdFix/releases/) and [gpu_es4_kernel_ext](https://github.com/GrapheneCt/gpu_es4_kernel_ext/releases) by copying `kubridge.skprx`, `fd_fix.skprx` and `libgpu_es4_kernel_ext.skpx` to your taiHEN plugins folder (usually `ur0:tai`) and adding three entries to your `config.txt` under `*KERNEL`:
+- Install [kubridge](https://github.com/TheOfficialFloW/kubridge/releases/) and [FdFix](https://github.com/TheOfficialFloW/FdFix/releases/) by copying `kubridge.skprx` and `fd_fix.skprx` to your taiHEN plugins folder (usually `ur0:tai`) and adding two entries to your `config.txt` under `*KERNEL`:
  
 ```
   *KERNEL
   ur0:tai/kubridge.skprx
   ur0:tai/fd_fix.skprx
-  ur0:tai/libgpu_es4_kernel_ext.skprx
 ```
 
 **Note** Don't install fd_fix.skprx if you're using the rePatch plugin!
+
+**Note 2** You no longer need to install ```libgpu_es4_kernel_ext.skprx``` with version 1.0.1 or higher (since it's already bundled with the game).
 
 - <u>Legally</u> obtain your copy of Heroes of Might and Magic III HD Edition
 for Android in form of an `.apk` file and `.obb` files (`main.1113.com.ubisoft.mightandmagic.heroesiii.obb` and `patch.1110.com.ubisoft.mightandmagic.heroesiii.obb` are located inside the `/sdcard/android/obb/com.ubisoft.mightandmagic.heroesiii/`) folder. [You can get all the required files directly from your phone](https://stackoverflow.com/questions/11012976/how-do-i-get-the-apk-of-an-installed-app-without-root-access) or by using any APK extractor you can find on Google Play.
