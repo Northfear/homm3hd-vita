@@ -65,6 +65,8 @@ In order to build the loader, you'll need a hardfp [vitasdk](https://github.com/
 
 - [SDL2 fork](https://github.com/Northfear/SDL/tree/vita-2.0.9-h3hd)
 
+- [pthread-embedded fork](https://github.com/bgK/pthread-embedded/tree/join-from-non-pthread)
+
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DVIDEO_VITA_PVR=ON
