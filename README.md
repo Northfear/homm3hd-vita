@@ -74,8 +74,8 @@ make install
 ```
 
 - [kubridge](https://github.com/TheOfficialFloW/kubridge)
-- [SDL_mixer](https://github.com/libsdl-org/SDL_mixer)
-- [SDL_image](https://github.com/libsdl-org/SDL_image)
+- [SDL_mixer](https://github.com/Northfear/SDL_mixer/tree/vita-2.0.4)
+- [SDL_image](https://github.com/Northfear/SDL_image/tree/vita-2.0.5)
 
 You may need to rebuild SDL_mixer and SDL_image manually after the installation of the required SDL2 fork.
 

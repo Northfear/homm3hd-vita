@@ -13,6 +13,6 @@
 #define APP_PATH "ux0:app/HOMM00003/"
 #define DATA_PATH "ux0:data/homm3hd"
 #define SO_PATH DATA_PATH "/" "libhomm3.so"
-#define CONFIG_FILE_PATH "ux0:data/homm3hd/config.txt"
+#define CONFIG_FILE_PATH DATA_PATH "/" "config.txt"
 
 #endif

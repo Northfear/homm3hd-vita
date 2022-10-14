@@ -613,6 +613,9 @@ int main(int argc, char *argv[])
 
 	loadConfig();
 
+	// make sure that pref folder exists (game saves will fail w/o it)
+	mkdir(DATA_PATH "/pref", 0777);
+
 	int (* SDL_main)(void) = (void *)so_symbol(&homm3_mod, "SDL_main");
 	SDL_main();
 
