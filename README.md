@@ -47,8 +47,6 @@ You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/
 
 - Sprites are sometimes rendered in the wrong order on the world map.
 
-- It may be hard to trigger ranged unit attack with double tap during the big battles (due to lower framerate). You may need to turn on the auto combat in some situations to trigger their attack (and disable it afterwards).
-
 - Unit movement speed is a bit too fast during combat.
 
 - The game can crash sometimes due to running out of vram.
@@ -65,14 +63,13 @@ In order to build the loader, you'll need a hardfp [vitasdk](https://github.com/
 
 - [SDL2 fork](https://github.com/Northfear/SDL/tree/vita-2.0.9-h3hd)
 
-- [pthread-embedded fork](https://github.com/bgK/pthread-embedded/tree/join-from-non-pthread)
-
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DVIDEO_VITA_PVR=ON
 make install
 ```
 
+- [pthread-embedded fork](https://github.com/bgK/pthread-embedded/tree/join-from-non-pthread)
 - [kubridge](https://github.com/TheOfficialFloW/kubridge)
 - [SDL_mixer](https://github.com/Northfear/SDL_mixer/tree/vita-2.0.4)
 - [SDL_image](https://github.com/Northfear/SDL_image/tree/vita-2.0.5)

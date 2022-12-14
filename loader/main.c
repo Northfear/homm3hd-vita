@@ -1,12 +1,3 @@
-/* main.c -- World of Goo .so loader
- *
- * Copyright (C) 2021 Andy Nguyen
- * Copyright (C) 2022 Rinnegatamante
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 #include <taihen.h>
 
 #include <psp2/appmgr.h>
@@ -220,6 +211,10 @@ void patch_game(void)
 
 	// disable logos vid. there's a higher chance of campaign vids bugging out with them enabled. why? I've no idea
 	hook_addr(so_symbol(&homm3_mod, "_Z9VideoPlayiiiiib"), (uintptr_t)&ret1);			// logos intro
+
+	// increase archer double-tap attack delay to 1.6s
+	uint32_t combat_double_tap_delay = 0x6ec8f501;
+	kuKernelCpuUnrestrictedMemcpy((void *)(homm3_mod.text_base + 0x000f3266), &combat_double_tap_delay, sizeof(combat_double_tap_delay));
 }
 
 static int __stack_chk_guard_fake = 0x42424242;
