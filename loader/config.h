@@ -4,9 +4,14 @@
 #define GRAPHICS_API_VITAGL 0
 #define GRAPHICS_API_PVR 1
 
+#if GRAPHICS_API_PVR
 // some memory has to be left for internal PVR stuff too
-#define MEMORY_NEWLIB_MB 224    // problems with less than 248 on first dungeon campaign into vid (if into logos aren't disabled)
-#define MEMORY_LIBC_MB 96       // problems with less than 84 (dissapearing border sprites, etc)
+#define MEMORY_NEWLIB_MB 160    // problems with less than 248 on first dungeon campaign into vid (if into logos aren't disabled)
+#define MEMORY_LIBC_MB 128      // problems with less than 84 (dissapearing border sprites, etc)
+#else
+#define MEMORY_NEWLIB_MB 328
+#define MEMORY_LIBC_MB 0
+#endif
 
 #define LOAD_ADDRESS 0x98000000
 

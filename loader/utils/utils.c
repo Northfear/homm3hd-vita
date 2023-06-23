@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <psp2/io/stat.h>
 #include <psp2/kernel/clib.h>
+#include <SDL2/SDL_image.h>
 
 
 // For check_kubridge
@@ -42,4 +43,27 @@ void debugPrintf(char *text, ...) {
 int check_module(char *module_name) {
     int search_unk[2];
     return _vshKernelSearchModuleByName(module_name, search_unk);
+}
+
+SDL_Texture* loadSDLTexture(char *path, SDL_Renderer *renderer)
+{
+	SDL_Texture* newTexture = NULL;
+	SDL_Surface* loadedSurface = IMG_Load(path);
+
+	if(loadedSurface == NULL)
+	{
+		sceClibPrintf("Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
+	}
+	else
+	{
+		newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+		if(newTexture == NULL)
+		{
+			sceClibPrintf("Unable to create texture from %s! SDL Error: %s\n", path, SDL_GetError());
+		}
+
+		SDL_FreeSurface(loadedSurface);
+	}
+
+	return newTexture;
 }

@@ -13,7 +13,7 @@
 		<liveitem>
 			<target>psla:-config</target>
 			<text align="center" text-align="center" word-wrap="off" ellipsis="on">
-				<str size="24" color="#ffffff" shadow="on">CHANGE LANGUAGE</str>
+				<str size="24" color="#ffffff" shadow="on">GAME OPTIONS</str>
 			</text>
 		</liveitem>
 	</frame>

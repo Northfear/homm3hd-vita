@@ -12,7 +12,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
-#include <GLES2/gl2.h>
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
 #include <theora/theoradec.h>
@@ -20,14 +19,19 @@
 #include <stdbool.h>
 
 #include "main.h"
+#include "input.h"
 #include "config.h"
 #include "so_util.h"
 #include "reimpl/pthr.h"
 #include "reimpl/other.h"
 #include "reimpl/memory.h"
-#include "utils/sfp2hfp.h"
 #include "utils/dialog.h"
 #include "utils/utils.h"
+
+#if GRAPHICS_API_PVR
+#include <GLES2/gl2.h>
+#include "utils/sfp2hfp.h"
+#endif
 
 
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
@@ -35,7 +39,9 @@ unsigned int sceLibcHeapSize = MEMORY_LIBC_MB * 1024 * 1024;
 unsigned int sceUserMainThreadStackSize = 1 * 1024 * 1024;
 
 so_module homm3_mod;
-SDL_Window* window = NULL;
+SDL_Window* sdlWindow = NULL;
+SDL_Texture* cursorTexture = NULL;
+SDL_GameController* gameController = NULL;
 int language = 0;
 
 int (* InputTextMessageHandler)(SDL_Event*);
@@ -43,6 +49,11 @@ int (* MouseMessageHandler)(SDL_Event*);
 int (* TouchMessageHandler)(SDL_Event*);
 unsigned int (* MultiTouchMessageHandler)(SDL_Event*);
 unsigned int (* KeyboardMessageHandler)(SDL_Event*);
+
+bool *showPointer;
+bool *dotemu_refreshScreen;
+uint32_t *gbInCombat;
+uint32_t *gbInDialog;
 
 
 void loadConfig(void)
@@ -55,6 +66,9 @@ void loadConfig(void)
 	if (config) {
 		while (EOF != fscanf(config, "%[^ ] %d\n", buffer, &value)) {
 			if (strcmp("language", buffer) == 0) language = value;
+			if (strcmp("gamepad_cursor_speed", buffer) == 0) gamepadCursorSpeed = value;
+			if (strcmp("rear_touch_cursor", buffer) == 0) rearTouchEnabled = value;
+			if (strcmp("touchpad_cursor_speed", buffer) == 0) rearTouchCursorSpeed = value;
 		}
 		fclose(config);
 	}
@@ -82,104 +96,145 @@ int getLanguage_fake()
 	return language;
 }
 
-SDL_Window* SDL_CreateWindow_hook(const char *title, int x, int y, int w, int h, Uint32 flags)
+SDL_Renderer* SDL_CreateRenderer_hook(SDL_Window *window, int index, Uint32 flags)
 {
 	// helps a bit with fast unit movemement by limiting the framerate
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+	SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
+	gameController = SDL_GameControllerOpen(0);
+	sdlWindow = window;
 
-	MouseMessageHandler = (void *)so_symbol(&homm3_mod, "_Z19MouseMessageHandlerP9SDL_Event");
-	InputTextMessageHandler = (void *)so_symbol(&homm3_mod, "_Z23InputTextMessageHandlerP9SDL_Event");
-	KeyboardMessageHandler = (void *)so_symbol(&homm3_mod, "_Z22KeyboardMessageHandlerP9SDL_Event");
-	TouchMessageHandler = (void *)so_symbol(&homm3_mod, "_Z19TouchMessageHandlerP9SDL_Event");
-	MultiTouchMessageHandler = (void *)so_symbol(&homm3_mod, "_Z24MultiTouchMessageHandlerP9SDL_Event");
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, index, flags);
 
-	window = SDL_CreateWindow(title, x, y, w, h, 0);
-	return window;
-}
- 
-int mobProcessSDLEvents(void *userdata, SDL_Event *event)
-{
-	switch(event->type)
+	if (renderer && !cursorTexture)
 	{
-		case SDL_KEYDOWN:
-		case SDL_KEYUP: {
-			KeyboardMessageHandler(event);
-			return 0;
-		}
-
-		case SDL_CONTROLLERAXISMOTION: {
-			return 0;
-		}
-
-		case SDL_CONTROLLERBUTTONDOWN:
-		case SDL_CONTROLLERBUTTONUP: {
-			return 0;
-		}
-
-		case SDL_TEXTINPUT: {
-			InputTextMessageHandler(event);
-			return 0;
-		}
-
-		case SDL_FINGERDOWN:
-		case SDL_FINGERUP:
-		case SDL_FINGERMOTION: {
-			// ignore rear touchpad
-			if (event->tfinger.touchId == 1 ) {
-				return 0;
-			}
-
-			TouchMessageHandler(event);
-
-			// for some weird reason cursor coordinates are always stuck at topleft corner. let's fix this manually
-			SDL_Rect *dotemu_mouseDstRect = (SDL_Rect *)(homm3_mod.text_base + 0x002a3098);
-
-			dotemu_mouseDstRect->x = event->tfinger.x * VITA_WIDTH - 14;
-			dotemu_mouseDstRect->y = event->tfinger.y * VITA_HEIGHT - 13;
-
-			return 1;
-		}
-
-		case SDL_MULTIGESTURE: {
-			MultiTouchMessageHandler(event);
-			return 1;
-		}
-
-		case SDL_QUIT: {
-			*(uint8_t *)(homm3_mod.text_base + 0x0037ec7c) = 1;
-			return 0;
-		}
-
-		case SDL_APP_WILLENTERBACKGROUND:
-		case SDL_APP_DIDENTERFOREGROUND:
-		case SDL_APP_DIDENTERBACKGROUND:
-		case SDL_APP_WILLENTERFOREGROUND: {
-			return 0;
-		}
-
-		case SDL_USEREVENT: {
-			*(uint8_t *)(homm3_mod.text_base + 0x0037ec98) = 1;
-			return 0;
-		}
-
-		default:
-			break;
+		cursorTexture = loadSDLTexture("data/cursor.png", renderer);
 	}
 
-	return 1;
+	return renderer;
+}
+
+void SDL_RenderPresent_hook(SDL_Renderer *renderer)
+{
+	if (*showPointer)
+	{
+		void *gpMouseManager = *(void **)(homm3_mod.text_base + 0x0037e868);
+		if (gpMouseManager)
+		{
+			int pointerSet = *(int *)(gpMouseManager + 0x50);
+			int pointerFrame = *(int *)(gpMouseManager + 0x54);
+			bool gameCursorEmpty = false;
+
+			if (pointerSet == 0)
+			{
+				gameCursorEmpty = true;
+			}
+			else if (pointerSet == 1)
+			{
+				if (pointerFrame == 0)
+				{
+					gameCursorEmpty = true;
+				}
+			}
+			else if (pointerSet == 2)
+			{
+				if (pointerFrame == 6)
+				{
+					gameCursorEmpty = true;
+				}
+			}
+
+			//sceClibPrintf("pointerSet: %d\n", pointerSet);
+			//sceClibPrintf("pointerFrame: %d\n", pointerFrame);
+
+			if (gameCursorEmpty && cursorTexture)
+			{
+				SDL_Rect dstrect;
+				dstrect.x = emulatedPointerPosX;
+				dstrect.y = emulatedPointerPosY;
+				dstrect.w = 10;
+				dstrect.h = 18;
+
+				SDL_RenderCopy(renderer, cursorTexture, NULL, &dstrect);
+
+				lastCursorRedrawTime = SDL_GetTicks();
+			}
+		}
+	}
+
+	// process cursor movement on render during combat (really bad cursor hover delay during big battles otherwise)
+	if (!ShouldProcessControllerOnTick())
+	{
+		ProcessControllerAxisMotion();
+	}
+
+	SDL_RenderPresent(renderer);
+}
+
+Uint32 SDL_GetTicks_hook(void)
+{
+	if (ShouldProcessControllerOnTick())
+	{
+		ProcessControllerAxisMotion();
+	}
+
+	return SDL_GetTicks();
+}
+
+Uint32 SDL_GetMouseState_hook(int *x, int *y)
+{
+	Uint32 buttonstate = 0;
+
+	if (x)
+	{
+		*x = emulatedPointerPosX;
+	}
+
+	if (y)
+	{
+		*y = emulatedPointerPosY;
+	}
+
+	if (SDL_GameControllerGetButton(gameController, SDL_CONTROLLER_BUTTON_A))
+	{
+		buttonstate |= SDL_BUTTON(1);
+	}
+
+	if (SDL_GameControllerGetButton(gameController, SDL_CONTROLLER_BUTTON_B))
+	{
+		buttonstate |= SDL_BUTTON(3);
+	}
+
+	return buttonstate;
 }
 
 // IME events aren't proceeded w/o a screen update, so we're just forcing it while on-screen KBD is active
 bool dotemu_needsScreenUpdate()
 {
-	bool *dotemu_refreshScreen = (bool *)(homm3_mod.text_base + 0x002a3121);
 	bool need_refresh = *dotemu_refreshScreen;
 
-	if (need_refresh) {
+	if (need_refresh)
+	{
 		*dotemu_refreshScreen = false;
 	}
 
-	return need_refresh || SDL_IsScreenKeyboardShown(window);
+	return need_refresh || SDL_IsScreenKeyboardShown(sdlWindow);
+}
+
+bool ShouldProcessControllerOnTick()
+{
+	void *gpCombatManager = *(void **)(homm3_mod.text_base + 0x0037e998);
+	if (gpCombatManager)
+	{
+		int isCastingSpell = *(int *)(gpCombatManager + 0x3c);
+
+		// gbInCombat is still 1 during level up dialogs. check if dialogs are open
+		// gbInDialog is 1 during spellcasting. add additional check if spellcasting is active
+		// (since there's a long hover delay problem during spellcasting in big battles)
+		return (*gbInCombat == 0 || (*gbInDialog == 1 && isCastingSpell != 1));
+	}
+
+	return (*gbInCombat == 0 || *gbInDialog == 1);
 }
 
 void patch_game(void)
@@ -212,6 +267,21 @@ void patch_game(void)
 	// disable logos vid. there's a higher chance of campaign vids bugging out with them enabled. why? I've no idea
 	hook_addr(so_symbol(&homm3_mod, "_Z9VideoPlayiiiiib"), (uintptr_t)&ret1);			// logos intro
 
+	MouseMessageHandler = (void *)so_symbol(&homm3_mod, "_Z19MouseMessageHandlerP9SDL_Event");
+	InputTextMessageHandler = (void *)so_symbol(&homm3_mod, "_Z23InputTextMessageHandlerP9SDL_Event");
+	KeyboardMessageHandler = (void *)so_symbol(&homm3_mod, "_Z22KeyboardMessageHandlerP9SDL_Event");
+	TouchMessageHandler = (void *)so_symbol(&homm3_mod, "_Z19TouchMessageHandlerP9SDL_Event");
+	MultiTouchMessageHandler = (void *)so_symbol(&homm3_mod, "_Z24MultiTouchMessageHandlerP9SDL_Event");
+
+	showPointer = (bool *)(homm3_mod.text_base + 0x002a33d9);
+	dotemu_refreshScreen = (bool *)(homm3_mod.text_base + 0x002a3121);
+	swipeLastX = (uint32_t *)(homm3_mod.text_base + 0x0037e6a0);
+	swipeLastY = (uint32_t *)(homm3_mod.text_base + 0x0037e6a4);
+	swipeDiffX = (int *)(homm3_mod.text_base + 0x0037e668);
+	swipeDiffY = (int *)(homm3_mod.text_base + 0x0037e6c8);
+	gbInCombat = (uint32_t *)(homm3_mod.text_base + 0x0037e6dc);
+	gbInDialog = (uint32_t *)(homm3_mod.text_base + 0x0037ca54);
+
 	// increase archer double-tap attack delay to 1.6s
 	uint32_t combat_double_tap_delay = 0x6ec8f501;
 	kuKernelCpuUnrestrictedMemcpy((void *)(homm3_mod.text_base + 0x000f3266), &combat_double_tap_delay, sizeof(combat_double_tap_delay));
@@ -240,13 +310,9 @@ static so_default_dynlib default_dynlib[] = {
 	{ "abort", (uintptr_t)&abort },
 	{ "access", (uintptr_t)&access },
 	{ "alphasort", (uintptr_t)&alphasort },
-	{ "atan", (uintptr_t)&atan_sfp },
-	{ "atan2", (uintptr_t)&atan2_sfp },
 	{ "atoi", (uintptr_t)&atoi },
-	{ "ceil", (uintptr_t)&ceil_sfp },
 	{ "close", (uintptr_t)&close },
 	{ "compress2", (uintptr_t)&compress2 },
-	{ "cosf", (uintptr_t)&cosf_sfp },
 	{ "crc32", (uintptr_t)&crc32 },
 	{ "dlclose", (uintptr_t)&ret1 },
 	{ "dlopen", (uintptr_t)&ret1 },
@@ -256,7 +322,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "fcntl", (uintptr_t)&fcntl },
 	{ "fflush", (uintptr_t)&fflush },
 	{ "fgetpos", (uintptr_t)&fgetpos },
-	{ "fmod", (uintptr_t)&fmod_sfp },
 	{ "fopen", (uintptr_t)&fopen },
 	{ "fprintf", (uintptr_t)&fprintf },
 	{ "fread", (uintptr_t)&fread },
@@ -274,7 +339,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glBindTexture", (uintptr_t)&glBindTexture },
 	{ "glBlendFuncSeparate", (uintptr_t)&glBlendFuncSeparate },
 	{ "glClear", (uintptr_t)&glClear },
-	{ "glClearDepthf", (uintptr_t)&glClearDepthf_sfp },
 	{ "glCompileShader", (uintptr_t)&glCompileShader },
 	{ "glCompressedTexImage2D", (uintptr_t)&glCompressedTexImage2D },
 	{ "glCreateProgram", (uintptr_t)&glCreateProgram },
@@ -283,7 +347,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glDeleteTextures", (uintptr_t)&glDeleteTextures },
 	{ "glDepthFunc", (uintptr_t)&glDepthFunc },
 	{ "glDepthMask", (uintptr_t)&glDepthMask },
-	{ "glDepthRangef", (uintptr_t)&glDepthRangef_sfp },
 	{ "glDisable", (uintptr_t)&glDisable },
 	{ "glDisableVertexAttribArray", (uintptr_t)&glDisableVertexAttribArray },
 	{ "glDrawArrays", (uintptr_t)&glDrawArrays },
@@ -309,13 +372,8 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glScissor", (uintptr_t)&glScissor },
 	{ "glShaderSource", (uintptr_t)&glShaderSource },
 	{ "glTexImage2D", (uintptr_t)&glTexImage2D },
-	{ "glTexParameterf", (uintptr_t)&glTexParameterf_sfp },
 	{ "glTexParameteri", (uintptr_t)&glTexParameteri },
-	{ "glUniform1f", (uintptr_t)&glUniform1f_sfp },
 	{ "glUniform1i", (uintptr_t)&glUniform1i },
-	{ "glUniform2f", (uintptr_t)&glUniform2f_sfp },
-	{ "glUniform3f", (uintptr_t)&glUniform3f_sfp },
-	{ "glUniform4f", (uintptr_t)&glUniform4f_sfp },
 	{ "glUseProgram", (uintptr_t)&glUseProgram },
 	{ "glVertexAttribPointer", (uintptr_t)&glVertexAttribPointer },
 	{ "gzclose", (uintptr_t)&gzclose },
@@ -422,12 +480,12 @@ static so_default_dynlib default_dynlib[] = {
 	{ "SDL_ConvertSurfaceFormat", (uintptr_t)&SDL_ConvertSurfaceFormat },
 	{ "SDL_CreateCond", (uintptr_t)&SDL_CreateCond },
 	{ "SDL_CreateMutex", (uintptr_t)&SDL_CreateMutex },
-	{ "SDL_CreateRenderer", (uintptr_t)&SDL_CreateRenderer },
+	{ "SDL_CreateRenderer", (uintptr_t)&SDL_CreateRenderer_hook },
 	{ "SDL_CreateRGBSurface", (uintptr_t)&SDL_CreateRGBSurface },
 	{ "SDL_CreateTexture", (uintptr_t)&SDL_CreateTexture },
 	{ "SDL_CreateTextureFromSurface", (uintptr_t)&SDL_CreateTextureFromSurface },
 	{ "SDL_CreateThread", (uintptr_t)&SDL_CreateThread },
-	{ "SDL_CreateWindow", (uintptr_t)&SDL_CreateWindow_hook },
+	{ "SDL_CreateWindow", (uintptr_t)&SDL_CreateWindow },
 	{ "SDL_Delay", (uintptr_t)&SDL_Delay },
 	{ "SDL_DestroyMutex", (uintptr_t)&SDL_DestroyMutex },
 	{ "SDL_DestroyRenderer", (uintptr_t)&SDL_DestroyRenderer },
@@ -438,11 +496,11 @@ static so_default_dynlib default_dynlib[] = {
 	{ "SDL_GetCurrentDisplayMode", (uintptr_t)&SDL_GetCurrentDisplayMode },
 	{ "SDL_GetError", (uintptr_t)&SDL_GetError },
 	{ "SDL_GetModState", (uintptr_t)&SDL_GetModState },
-	{ "SDL_GetMouseState", (uintptr_t)&SDL_GetMouseState },
+	{ "SDL_GetMouseState", (uintptr_t)&SDL_GetMouseState_hook },
 	{ "SDL_GetRendererInfo", (uintptr_t)&SDL_GetRendererInfo },
 	{ "SDL_GetTextureBlendMode", (uintptr_t)&SDL_GetTextureBlendMode },
 	{ "SDL_GetTextureColorMod", (uintptr_t)&SDL_GetTextureColorMod },
-	{ "SDL_GetTicks", (uintptr_t)&SDL_GetTicks },
+	{ "SDL_GetTicks", (uintptr_t)&SDL_GetTicks_hook },
 	{ "SDL_GL_BindTexture", (uintptr_t)&SDL_GL_BindTexture },
 	{ "SDL_GL_GetCurrentContext", (uintptr_t)&SDL_GL_GetCurrentContext },
 	{ "SDL_GL_MakeCurrent", (uintptr_t)&SDL_GL_MakeCurrent },
@@ -465,7 +523,7 @@ static so_default_dynlib default_dynlib[] = {
 	{ "SDL_RenderClear", (uintptr_t)&SDL_RenderClear },
 	{ "SDL_RenderCopy", (uintptr_t)&SDL_RenderCopy },
 	{ "SDL_RenderFillRect", (uintptr_t)&SDL_RenderFillRect },
-	{ "SDL_RenderPresent", (uintptr_t)&SDL_RenderPresent },
+	{ "SDL_RenderPresent", (uintptr_t)&SDL_RenderPresent_hook },
 	{ "SDL_RWFromFile", (uintptr_t)&SDL_RWFromFile },
 	{ "SDL_RWFromMem", (uintptr_t)&SDL_RWFromMem },
 	{ "SDL_SetColorKey", (uintptr_t)&SDL_SetColorKey },
@@ -489,7 +547,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "SDL_WaitThread", (uintptr_t)&SDL_WaitThread },
 	{ "setlocale", (uintptr_t)&setlocale },
 	{ "setvbuf", (uintptr_t)&setvbuf },
-	{ "sinf", (uintptr_t)&sinf_sfp },
 	{ "snprintf", (uintptr_t)&snprintf },
 	{ "sprintf", (uintptr_t)&sprintf },
 	{ "srand48", (uintptr_t)&srand48 },
@@ -518,7 +575,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "th_decode_headerin", (uintptr_t)&th_decode_headerin },
 	{ "th_decode_packetin", (uintptr_t)&th_decode_packetin },
 	{ "th_decode_ycbcr_out", (uintptr_t)&th_decode_ycbcr_out },
-	{ "th_granule_time", (uintptr_t)&th_granule_time_sfp },
 	{ "th_info_clear", (uintptr_t)&th_info_clear },
 	{ "th_info_init", (uintptr_t)&th_info_init },
 	{ "th_setup_free", (uintptr_t)&th_setup_free },
@@ -536,7 +592,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "vorbis_comment_clear", (uintptr_t)&vorbis_comment_clear },
 	{ "vorbis_comment_init", (uintptr_t)&vorbis_comment_init },
 	{ "vorbis_dsp_clear", (uintptr_t)&vorbis_dsp_clear },
-	{ "vorbis_granule_time", (uintptr_t)&vorbis_granule_time_sfp },
 	{ "vorbis_info_clear", (uintptr_t)&vorbis_info_clear },
 	{ "vorbis_info_init", (uintptr_t)&vorbis_info_init },
 	{ "vorbis_synthesis", (uintptr_t)&vorbis_synthesis },
@@ -553,6 +608,39 @@ static so_default_dynlib default_dynlib[] = {
 	{ "wmemmove", (uintptr_t)&wmemmove },
 	{ "wmemset", (uintptr_t)&wmemset },
 	{ "write", (uintptr_t)&write },
+#if GRAPHICS_API_PVR
+	{ "atan", (uintptr_t)&atan_sfp },
+	{ "atan2", (uintptr_t)&atan2_sfp },
+	{ "ceil", (uintptr_t)&ceil_sfp },
+	{ "cosf", (uintptr_t)&cosf_sfp },
+	{ "fmod", (uintptr_t)&fmod_sfp },
+	{ "glClearDepthf", (uintptr_t)&glClearDepthf_sfp },
+	{ "glDepthRangef", (uintptr_t)&glDepthRangef_sfp },
+	{ "glTexParameterf", (uintptr_t)&glTexParameterf_sfp },
+	{ "glUniform1f", (uintptr_t)&glUniform1f_sfp },
+	{ "glUniform2f", (uintptr_t)&glUniform2f_sfp },
+	{ "glUniform3f", (uintptr_t)&glUniform3f_sfp },
+	{ "glUniform4f", (uintptr_t)&glUniform4f_sfp },
+	{ "sinf", (uintptr_t)&sinf_sfp },
+	{ "th_granule_time", (uintptr_t)&th_granule_time_sfp },
+	{ "vorbis_granule_time", (uintptr_t)&vorbis_granule_time_sfp },
+#else
+	{ "atan", (uintptr_t)&atan },
+	{ "atan2", (uintptr_t)&atan2 },
+	{ "ceil", (uintptr_t)&ceil },
+	{ "cosf", (uintptr_t)&cosf },
+	{ "fmod", (uintptr_t)&fmod },
+	{ "glClearDepthf", (uintptr_t)&glClearDepthf },
+	{ "glDepthRangef", (uintptr_t)&glDepthRangef },
+	{ "glTexParameterf", (uintptr_t)&glTexParameterf },
+	{ "glUniform1f", (uintptr_t)&glUniform1f },
+	{ "glUniform2f", (uintptr_t)&glUniform2f },
+	{ "glUniform3f", (uintptr_t)&glUniform3f },
+	{ "glUniform4f", (uintptr_t)&glUniform4f },
+	{ "sinf", (uintptr_t)&sinf },
+	{ "th_granule_time", (uintptr_t)&th_granule_time },
+	{ "vorbis_granule_time", (uintptr_t)&vorbis_granule_time },
+#endif
 };
 
 
@@ -562,6 +650,7 @@ int main(int argc, char *argv[])
 	SceAppUtilAppEventParam eventParam;
 	sceClibMemset(&eventParam, 0, sizeof(SceAppUtilAppEventParam));
 	sceAppUtilReceiveAppEvent(&eventParam);
+
 	if (eventParam.type == 0x05)
 	{
 		char buffer[2048];
@@ -584,14 +673,17 @@ int main(int argc, char *argv[])
 		fatal_error("Error kubridge.skprx is not installed.");
 	}
 
+#if GRAPHICS_API_PVR
 	if (check_module("libgpu_es4_kernel_ext") < 0)
 	{
 		SceUID mod_id = -1;
 		mod_id = taiLoadStartKernelModule(APP_PATH "module/libgpu_es4_kernel_ext.skprx", 0, NULL, 0);
-		if (mod_id < 0) {
+		if (mod_id < 0)
+		{
 			show_message("WARNING!\nlibgpu_es4_kernel_ext.skprx plugin is not installed!\nVideo playback is disabled. Game WILL have some visual bugs without it.");
 		}
 	}
+#endif
 
 	if (so_file_load(&homm3_mod, SO_PATH, LOAD_ADDRESS) < 0)
 	{
@@ -613,6 +705,11 @@ int main(int argc, char *argv[])
 
 	int (* SDL_main)(void) = (void *)so_symbol(&homm3_mod, "SDL_main");
 	SDL_main();
+
+	if (cursorTexture)
+	{
+		SDL_DestroyTexture(cursorTexture);
+	}
 
 	term_memory();
 

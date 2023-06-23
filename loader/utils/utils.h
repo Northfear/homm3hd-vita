@@ -13,9 +13,12 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
+#include <SDL2/SDL.h>
+
 int ret0(void);
 int ret1(void);
 void debugPrintf(char *text, ...);
 int check_module(char *module_name);
+SDL_Texture* loadSDLTexture(char *path, SDL_Renderer *renderer);
 
 #endif // __UTILS_H

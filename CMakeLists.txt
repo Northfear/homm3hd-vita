@@ -21,6 +21,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11")
 
 add_executable(HOMM3.elf
   loader/main.c
+  loader/input.c
   loader/so_util.c
   loader/reimpl/memory.c
   loader/reimpl/pthr.c
@@ -114,5 +115,6 @@ vita_create_vpk(HOMM3.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/module/libIMGEGL.suprx module/libIMGEGL.suprx
        ${CMAKE_SOURCE_DIR}/module/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
        ${CMAKE_SOURCE_DIR}/module/libgpu_es4_kernel_ext.skprx module/libgpu_es4_kernel_ext.skprx
+       ${CMAKE_SOURCE_DIR}/data/cursor.png data/cursor.png
        ${CMAKE_BINARY_DIR}/config.bin config.bin
 )

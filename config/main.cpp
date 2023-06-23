@@ -69,6 +69,9 @@ const char *LanguageName[LANGUAGES_NUM] = {
 };
 
 int language = 0;
+int gamepad_cursor_speed = 10;
+bool rear_touch_cursor = false;
+int touchpad_cursor_speed = 10;
 
 void loadConfig(void) {
   char buffer[30];
@@ -79,6 +82,9 @@ void loadConfig(void) {
   if (config) {
     while (EOF != fscanf(config, "%[^ ] %d\n", buffer, &value)) {
       if (strcmp("language", buffer) == 0) language = value;
+      if (strcmp("gamepad_cursor_speed", buffer) == 0) gamepad_cursor_speed = value;
+      if (strcmp("rear_touch_cursor", buffer) == 0) rear_touch_cursor = value;
+      if (strcmp("touchpad_cursor_speed", buffer) == 0) touchpad_cursor_speed = value;
     }
     fclose(config);
   }
@@ -89,16 +95,25 @@ void saveConfig(void) {
 
   if (config) {
     fprintf(config, "%s %d\n", "language", language);
+    fprintf(config, "%s %d\n", "gamepad_cursor_speed", gamepad_cursor_speed);
+    fprintf(config, "%s %d\n", "rear_touch_cursor", rear_touch_cursor);
+    fprintf(config, "%s %d\n", "touchpad_cursor_speed", touchpad_cursor_speed);
     fclose(config);
   }
 }
 
 char *options_descs[] = {
   "Game language",
+  "Gamepad cursor speed",
+  "Rear touchpad cursor control",
+  "Rear touchpad cursor speed",
 };
 
 enum {
   OPT_LANGUAGE,
+  OPT_GAMEPAD_SPEED,
+  OPT_REAR_TOUCH,
+  OPT_REAR_TOUCH_SPEED
 };
 
 char *desc = nullptr;
@@ -134,7 +149,7 @@ int main(int argc, char *argv[]) {
     ImGui::SetNextWindowSize(ImVec2(640, 480), ImGuiSetCond_Always);
     ImGui::Begin("##main", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-    ImGui::TextColored(ImVec4(255, 255, 0, 255), "Game settings");
+    ImGui::TextColored(ImVec4(255, 255, 0, 255), "Game options");
     ImGui::Text("Language:"); ImGui::SameLine();
     if (ImGui::BeginCombo("##combor", LanguageName[language])) {
       for (int n = 0; n < LANGUAGES_NUM; n++) {
@@ -148,6 +163,15 @@ int main(int argc, char *argv[]) {
       ImGui::EndCombo();
     }
     SetDescription(OPT_LANGUAGE);
+
+    ImGui::Text("Gamepad cursor speed:"); ImGui::SameLine();
+    ImGui::SliderInt("##gamepad_cursor_speed", &gamepad_cursor_speed, 5, 50);
+
+    ImGui::Text("Rear touchpad cursor control:"); ImGui::SameLine();
+    ImGui::Checkbox("##rear_touch_cursor", &rear_touch_cursor);
+
+    ImGui::Text("Rear touchpad cursor speed:"); ImGui::SameLine();
+    ImGui::SliderInt("##touchpad_cursor_speed", &touchpad_cursor_speed, 1, 20);
 
     if (ImGui::Button("Save and Exit"))
       exit_code = 0;

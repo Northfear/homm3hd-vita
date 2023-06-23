@@ -39,6 +39,22 @@ for Android in form of an `.apk` file and `.obb` files (`main.1113.com.ubisoft.m
 - Same as before, open the `patch.1110.com.ubisoft.mightandmagic.heroesiii.obb` with the zip explorer and extract the contents inside the zip to `ux0:data/homm3hd/`.
 - Install `HOMM3.vpk` (from [Releases](https://github.com/Northfear/homm3hd-vita/releases/latest)).
 
+## Controls
+
+- Left analog stick - Cursor movement
+- Right analog stick - Map scroll
+- × - Left mouse button
+- ○ - Right mouse button
+- R1 (hold) - Cursor movement speedup
+
+Original touch controls are supported.
+
+During battle ○ button is used for attack direction selection (when clicked on the enemy unit within attack range).
+Double × click is used for ranged attack. To view unit info during battle click on the unit with × button, wait 2-3 seconds and then click × again.
+
+You can enable rear touchpad cursor movement in the game configuration utility (`GAME OPTIONS` on the bottom of the launcher screen).
+Use double tap to emulate LMB with rear touchpad and second finger tap to emulate RMB.
+
 ## Additional info
 
 You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/homm3hd/data/maps/<your_language_folder>/` folder (`ux0:data/homm3hd/data/maps/en/` for example). Note that ONLY "The Restoration of Erathia" maps are supported.
@@ -48,6 +64,10 @@ You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/
 - Sprites are sometimes rendered in the wrong order on the world map.
 
 - Unit movement speed is a bit too fast during combat.
+
+- Buildings / units / some UI elements may flicker during gamepad cursor movement.
+
+- Performance during big battles is kinda bad.
 
 - The game can crash sometimes due to running out of vram.
 
