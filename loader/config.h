@@ -1,9 +1,6 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define GRAPHICS_API_VITAGL 0
-#define GRAPHICS_API_PVR 1
-
 #if GRAPHICS_API_PVR
 // some memory has to be left for internal PVR stuff too
 #define MEMORY_NEWLIB_MB 160    // problems with less than 248 on first dungeon campaign into vid (if into logos aren't disabled)

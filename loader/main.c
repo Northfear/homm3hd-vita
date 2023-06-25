@@ -33,6 +33,10 @@
 #include "utils/sfp2hfp.h"
 #endif
 
+#if GRAPHICS_API_VITAGL
+#include <vitaGL.h>
+#endif
+
 
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 unsigned int sceLibcHeapSize = MEMORY_LIBC_MB * 1024 * 1024;
@@ -286,6 +290,15 @@ void patch_game(void)
 	uint32_t combat_double_tap_delay = 0x6ec8f501;
 	kuKernelCpuUnrestrictedMemcpy((void *)(homm3_mod.text_base + 0x000f3266), &combat_double_tap_delay, sizeof(combat_double_tap_delay));
 }
+
+#if GRAPHICS_API_VITAGL
+void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
+{
+	// fake GL_RENDERBUFFER_DEPTH_SIZE (?) to avoid assert
+	sceClibPrintf("glGetRenderbufferParameteriv   target: %d   pname: %d\n", target, pname);
+	*params = 1;
+}
+#endif
 
 static int __stack_chk_guard_fake = 0x42424242;
 static FILE __sF_fake[0x100][3];

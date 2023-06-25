@@ -15,7 +15,7 @@ set(VITA_TITLEID  "HOMM00003")
 set(VITA_VERSION  "01.03")
 set(VITA_MKSFOEX_FLAGS "-d ATTRIBUTE2=12")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -mfloat-abi=hard -Wno-strict-aliasing \
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -Wno-strict-aliasing \
                   -Wl,-q,--wrap,memcpy,--wrap,memmove,--wrap,memset,--wrap,free,--wrap,malloc,--wrap,calloc,--wrap,realloc,--wrap,memalign")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11")
 
@@ -35,45 +35,92 @@ target_include_directories(HOMM3.elf
   PUBLIC ${CMAKE_SOURCE_DIR}/loader
 )
 
-target_link_libraries(HOMM3.elf
-  pthread
-  SDL2_mixer
-  SDL2_image
-  SDL2
-  vorbis
-  ogg
-  vorbisfile
-  FLAC
-  mikmod
-  mpg123
-  modplug
-  theora
-  jpeg
-  png
-  webp
-  libGLESv2_stub
-  libgpu_es4_ext_stub
-  libIMGEGL_stub
-  m
-  z
-  stdc++
-  taihen_stub
-  kubridge_stub
-  SceAppMgr_stub
-  SceAppUtil_stub
-  SceAudio_stub
-  SceAudioIn_stub
-  SceCtrl_stub
-  SceCommonDialog_stub
-  SceDisplay_stub
-  SceIme_stub
-  SceGxm_stub
-  SceHid_stub
-  ScePower_stub
-  SceTouch_stub
-  SceMotion_stub
-  SceVshBridge_stub
-)
+if(GRAPHICS_API_VITAGL)
+  add_definitions(-DGRAPHICS_API_VITAGL=1)
+  target_link_libraries(HOMM3.elf
+    pthread
+    SDL2_mixer
+    SDL2_image
+    SDL2
+    vitaGL
+    vitashark
+    mathneon
+    vorbis
+    ogg
+    vorbisfile
+    FLAC
+    mikmod
+    mpg123
+    modplug
+    theora
+    jpeg
+    png
+    webp
+    m
+    z
+    stdc++
+    SceShaccCgExt
+    taihen_stub
+    kubridge_stub
+    SceAppMgr_stub
+    SceAppUtil_stub
+    SceAudio_stub
+    SceAudioIn_stub
+    SceCtrl_stub
+    SceCommonDialog_stub
+    SceDisplay_stub
+    SceIme_stub
+    SceGxm_stub
+    SceHid_stub
+    ScePower_stub
+    SceTouch_stub
+    SceMotion_stub
+    SceVshBridge_stub
+    SceShaccCg_stub
+    SceKernelDmacMgr_stub
+  )
+else()
+  add_definitions(-DGRAPHICS_API_PVR=1)
+  target_link_libraries(HOMM3.elf
+    pthread
+    SDL2_mixer
+    SDL2_image
+    SDL2
+    vorbis
+    ogg
+    vorbisfile
+    FLAC
+    mikmod
+    mpg123
+    modplug
+    theora
+    jpeg
+    png
+    webp
+    libGLESv2_stub
+    libgpu_es4_ext_stub
+    libIMGEGL_stub
+    m
+    z
+    stdc++
+    taihen_stub
+    kubridge_stub
+    SceAppMgr_stub
+    SceAppUtil_stub
+    SceAudio_stub
+    SceAudioIn_stub
+    SceCtrl_stub
+    SceCommonDialog_stub
+    SceDisplay_stub
+    SceIme_stub
+    SceGxm_stub
+    SceHid_stub
+    ScePower_stub
+    SceTouch_stub
+    SceMotion_stub
+    SceVshBridge_stub
+  )
+endif()
 
 add_executable(config
   config/main.cpp
