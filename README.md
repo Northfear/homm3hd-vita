@@ -61,6 +61,8 @@ You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/
 
 ## Known Issues
 
+- Game takes around a minute to load (black screen right after the start).
+
 - Sprites are sometimes rendered in the wrong order on the world map.
 
 - Unit movement speed is a bit too fast during combat.
