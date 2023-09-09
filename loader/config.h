@@ -6,7 +6,7 @@
 #define MEMORY_NEWLIB_MB 160    // problems with less than 248 on first dungeon campaign into vid (if into logos aren't disabled)
 #define MEMORY_LIBC_MB 128      // problems with less than 84 (dissapearing border sprites, etc)
 #else
-#define MEMORY_NEWLIB_MB 328
+#define MEMORY_NEWLIB_MB 256
 #define MEMORY_LIBC_MB 0
 #endif
 
@@ -16,5 +16,6 @@
 #define DATA_PATH "ux0:data/homm3hd"
 #define SO_PATH DATA_PATH "/" "libhomm3.so"
 #define CONFIG_FILE_PATH DATA_PATH "/" "config.txt"
+#define TROPHIES_FILE DATA_PATH "/" "trophies.chk"
 
 #endif

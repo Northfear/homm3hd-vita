@@ -72,6 +72,7 @@ int language = 0;
 int gamepad_cursor_speed = 10;
 bool rear_touch_cursor = false;
 int touchpad_cursor_speed = 10;
+int gamepad_deadzone = 3000;
 
 void loadConfig(void) {
   char buffer[30];
@@ -85,6 +86,7 @@ void loadConfig(void) {
       if (strcmp("gamepad_cursor_speed", buffer) == 0) gamepad_cursor_speed = value;
       if (strcmp("rear_touch_cursor", buffer) == 0) rear_touch_cursor = value;
       if (strcmp("touchpad_cursor_speed", buffer) == 0) touchpad_cursor_speed = value;
+      if (strcmp("gamepad_deadzone", buffer) == 0) gamepad_deadzone = value;
     }
     fclose(config);
   }
@@ -98,6 +100,7 @@ void saveConfig(void) {
     fprintf(config, "%s %d\n", "gamepad_cursor_speed", gamepad_cursor_speed);
     fprintf(config, "%s %d\n", "rear_touch_cursor", rear_touch_cursor);
     fprintf(config, "%s %d\n", "touchpad_cursor_speed", touchpad_cursor_speed);
+    fprintf(config, "%s %d\n", "gamepad_deadzone", gamepad_deadzone);
     fclose(config);
   }
 }
@@ -107,13 +110,15 @@ char *options_descs[] = {
   "Gamepad cursor speed",
   "Rear touchpad cursor control",
   "Rear touchpad cursor speed",
+  "Left analog stick deadzone",
 };
 
 enum {
   OPT_LANGUAGE,
   OPT_GAMEPAD_SPEED,
   OPT_REAR_TOUCH,
-  OPT_REAR_TOUCH_SPEED
+  OPT_REAR_TOUCH_SPEED,
+  OPT_DEADZONE
 };
 
 char *desc = nullptr;
@@ -172,6 +177,9 @@ int main(int argc, char *argv[]) {
 
     ImGui::Text("Rear touchpad cursor speed:"); ImGui::SameLine();
     ImGui::SliderInt("##touchpad_cursor_speed", &touchpad_cursor_speed, 1, 20);
+
+    ImGui::Text("Left analog stick deadzone:"); ImGui::SameLine();
+    ImGui::SliderInt("##gamepad_deadzone", &gamepad_deadzone, 2000, 10000);
 
     if (ImGui::Button("Save and Exit"))
       exit_code = 0;

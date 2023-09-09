@@ -2,6 +2,7 @@
 #include <psp2/gxm.h>
 #include <psp2/kernel/sysmem.h>
 #include <psp2/message_dialog.h>
+#include <string.h>
 
 
 #define VITA_GXM_SCREEN_WIDTH     960

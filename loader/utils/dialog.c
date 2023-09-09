@@ -178,6 +178,8 @@ void fatal_error(const char *fmt, ...) {
 }
 
 void show_message(const char *msg) {
+	debugPrintf("%s\n", msg);
+
 #if GRAPHICS_API_VITAGL
 	vglInit(0);
 
@@ -186,8 +188,6 @@ void show_message(const char *msg) {
 	while (!get_msg_dialog_result())
 		vglSwapBuffers(GL_TRUE);
 #else
-	debugPrintf("%s\n", msg);
-
 	_gxm_minimal_init_for_common_dialog();
 	init_msg_dialog(msg);
 	_gxm_init_for_common_dialog();

@@ -30,7 +30,7 @@ In order to properly install the game, you'll have to follow these steps precise
 
 **Note** Don't install fd_fix.skprx if you're using the rePatch plugin!
 
-**Note 2** You no longer need to install ```libgpu_es4_kernel_ext.skprx``` with version 1.0.1 or higher (since it's already bundled with the game).
+**Note 2** ```libgpu_es4_kernel_ext.skprx``` plugin is no longer needed since version 1.2.0.
 
 - <u>Legally</u> obtain your copy of Heroes of Might and Magic III HD Edition
 for Android in form of an `.apk` file and `.obb` files (`main.1113.com.ubisoft.mightandmagic.heroesiii.obb` and `patch.1110.com.ubisoft.mightandmagic.heroesiii.obb` are located inside the `/sdcard/android/obb/com.ubisoft.mightandmagic.heroesiii/`) folder. [You can get all the required files directly from your phone](https://stackoverflow.com/questions/11012976/how-do-i-get-the-apk-of-an-installed-app-without-root-access) or by using any APK extractor you can find on Google Play.
@@ -55,6 +55,8 @@ Double × click is used for ranged attack. To view unit info during battle click
 You can enable rear touchpad cursor movement in the game configuration utility (`GAME OPTIONS` on the bottom of the launcher screen).
 Use double tap to emulate LMB with rear touchpad and second finger tap to emulate RMB.
 
+Left analog stick deadzone can be changed in game configuration utility.
+
 ## Additional info
 
 You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/homm3hd/data/maps/<your_language_folder>/` folder (`ux0:data/homm3hd/data/maps/en/` for example). Note that ONLY "The Restoration of Erathia" maps are supported.
@@ -63,31 +65,25 @@ You can add custom "Restoration of Erathia" maps by copying them into `ux0:data/
 
 - Game takes around a minute to load (black screen right after the start).
 
-- Sprites are sometimes rendered in the wrong order on the world map.
-
-- Unit movement speed is a bit too fast during combat.
-
 - Buildings / units / some UI elements may flicker during gamepad cursor movement.
 
-- Performance during big battles is kinda bad.
-
-- The game can crash sometimes due to running out of vram.
-
-- Visual bugs may appear after some time (dark UI elements, weird looking rectangles in the place of fading out UI elements). It's recommended to save the game and restart it at that point.
+- The game can freeze/crash sometimes during video playback (after playing 3-4 campaign videos).
 
 ## Build Instructions (For Developers)
 
-In order to build the loader, you'll need a hardfp [vitasdk](https://github.com/vitasdk) (not the softfp one that's used for other Android ports)
+In order to build the loader, you'll need a softfp [vitasdk](https://github.com/vitasdk-softfp/)
 
 ### Dependencies
 
-- [PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2)
+- [vitaGL](https://github.com/Rinnegatamante/vitaGL)
+
+```make HAVE_GLSL_SUPPORT=1 SOFTFP_ABI=1 SINGLE_THREADED_GC=1 install```
 
 - [SDL2 fork](https://github.com/Northfear/SDL/tree/vita-2.0.9-h3hd)
 
 ```bash
 mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DVIDEO_VITA_PVR=ON
+cmake .. -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DVIDEO_VITA_VGL=ON
 make install
 ```
 
@@ -108,5 +104,6 @@ cmake .. && make
 ## Credits
 
 - [TheOfficialFloW](https://github.com/TheOfficialFloW/) for the original .so loader.
+- [Rinnegatamante](https://github.com/Rinnegatamante) for the vitaGL, all of the related fixes to it and trophy support (NoTrpDrm).
 - [GrapheneCt](https://github.com/GrapheneCt) for the PVR_PSP2, gpu_es4_kernel_ext and lots of tips.
 - [TheOfficialFloW](https://github.com/TheOfficialFloW/), [Rinnegatamante](https://github.com/Rinnegatamante/) and [v-atamanenko](https://github.com/v-atamanenko) for all of the previous work on Android wrapper ports.

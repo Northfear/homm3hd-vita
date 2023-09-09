@@ -80,7 +80,11 @@ void init_memory()
 	info.size = sizeof(SceKernelFreeMemorySizeInfo);
 	sceKernelGetFreeMemorySize(&info);
 
+#if GRAPHICS_API_VITAGL
+	size_t phycont_size = 0;
+#else
 	size_t phycont_size = info.size_phycont > PHYCONT_THRESHHOLD ? info.size_phycont - PHYCONT_THRESHHOLD : 0;
+#endif
 	size_t cdlg_size = 0;
 	size_t cdram_size = 0;
 

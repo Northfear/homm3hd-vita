@@ -16,6 +16,7 @@ extern float gamepadCursorSpeed;
 extern float touchpadCursorSpeed;
 extern bool rearTouchEnabled;
 extern float rearTouchCursorSpeed;
+extern uint16_t gamepadDeadzone;
 
 extern int (* InputTextMessageHandler)(SDL_Event*);
 extern int (* MouseMessageHandler)(SDL_Event*);

@@ -3,6 +3,7 @@
 #include <psp2/appmgr.h>
 #include <psp2/power.h>
 #include <psp2/io/fcntl.h>
+#include <psp2/io/stat.h> 
 #include <psp2/kernel/clib.h>
 
 #include <wctype.h>
@@ -27,6 +28,7 @@
 #include "reimpl/memory.h"
 #include "utils/dialog.h"
 #include "utils/utils.h"
+#include "utils/trophies.h"
 
 #if GRAPHICS_API_PVR
 #include <GLES2/gl2.h>
@@ -37,10 +39,8 @@
 #include <vitaGL.h>
 #endif
 
-
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 unsigned int sceLibcHeapSize = MEMORY_LIBC_MB * 1024 * 1024;
-unsigned int sceUserMainThreadStackSize = 1 * 1024 * 1024;
 
 so_module homm3_mod;
 SDL_Window* sdlWindow = NULL;
@@ -73,6 +73,7 @@ void loadConfig(void)
 			if (strcmp("gamepad_cursor_speed", buffer) == 0) gamepadCursorSpeed = value;
 			if (strcmp("rear_touch_cursor", buffer) == 0) rearTouchEnabled = value;
 			if (strcmp("touchpad_cursor_speed", buffer) == 0) rearTouchCursorSpeed = value;
+			if (strcmp("gamepad_deadzone", buffer) == 0) gamepadDeadzone = value;
 		}
 		fclose(config);
 	}
@@ -114,6 +115,18 @@ SDL_Renderer* SDL_CreateRenderer_hook(SDL_Window *window, int index, Uint32 flag
 	{
 		cursorTexture = loadSDLTexture("data/cursor.png", renderer);
 	}
+
+#if GRAPHICS_API_VITAGL
+	// Initing trophy system
+	SceIoStat st;
+	int res = trophies_init();
+	if (res < 0 && sceIoGetstat(TROPHIES_FILE, &st) < 0)
+	{
+		FILE *f = fopen(TROPHIES_FILE, "w");
+		fclose(f);
+		show_message("This game features unlockable trophies but NoTrpDrm is not installed. If you want to be able to unlock trophies, please install it.");
+	}
+#endif
 
 	return renderer;
 }
@@ -225,6 +238,24 @@ bool dotemu_needsScreenUpdate()
 	return need_refresh || SDL_IsScreenKeyboardShown(sdlWindow);
 }
 
+void dotemu_awardAchievement(uint32_t achievementId)
+{
+	// Home Sweet Home 		0
+	// Devilish				1
+	// Cold Blooded			2
+	// Berserker			3
+	// Liberator			4
+	// Lich King			5
+	// Erathia Restored		6
+	// Independence			7
+	// Squire				8
+	// Knight				9
+	// General				10
+	// Hero					11
+	// Fetchez la Vache!	12
+	trophies_unlock(achievementId + 1);
+}
+
 bool ShouldProcessControllerOnTick()
 {
 	void *gpCombatManager = *(void **)(homm3_mod.text_base + 0x0037e998);
@@ -261,12 +292,15 @@ void patch_game(void)
 
 	hook_addr(so_symbol(&homm3_mod, "_Z19mobProcessSDLEventsPvP9SDL_Event"), (uintptr_t)&mobProcessSDLEvents);
 	hook_addr(so_symbol(&homm3_mod, "_Z24dotemu_needsScreenUpdatev"), (uintptr_t)&dotemu_needsScreenUpdate);
+	hook_addr(so_symbol(&homm3_mod, "_Z23dotemu_awardAchievement14AchievementsId"), (uintptr_t)&dotemu_awardAchievement);
 
+#if GRAPHICS_API_PVR
 	// disable videos if libgpu_es4_kernel_ext plugin is not installed (crashing on campaign videos otherwise)
 	if (check_module("libgpu_es4_kernel_ext") < 0)
 	{
 		hook_addr(so_symbol(&homm3_mod, "_Z9VideoOpeniiiiiibbb"), (uintptr_t)&ret1);	// vids in general
 	}
+#endif
 
 	// disable logos vid. there's a higher chance of campaign vids bugging out with them enabled. why? I've no idea
 	hook_addr(so_symbol(&homm3_mod, "_Z9VideoPlayiiiiib"), (uintptr_t)&ret1);			// logos intro
@@ -296,7 +330,7 @@ void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
 {
 	// fake GL_RENDERBUFFER_DEPTH_SIZE (?) to avoid assert
 	sceClibPrintf("glGetRenderbufferParameteriv   target: %d   pname: %d\n", target, pname);
-	*params = 1;
+	*params = 16;
 }
 #endif
 
@@ -348,7 +382,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glActiveTexture", (uintptr_t)&glActiveTexture },
 	{ "glAttachShader", (uintptr_t)&glAttachShader },
 	{ "glBindAttribLocation", (uintptr_t)&glBindAttribLocation },
-	{ "glBindRenderbuffer", (uintptr_t)&glBindRenderbuffer },
 	{ "glBindTexture", (uintptr_t)&glBindTexture },
 	{ "glBlendFuncSeparate", (uintptr_t)&glBlendFuncSeparate },
 	{ "glClear", (uintptr_t)&glClear },
@@ -356,7 +389,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glCompressedTexImage2D", (uintptr_t)&glCompressedTexImage2D },
 	{ "glCreateProgram", (uintptr_t)&glCreateProgram },
 	{ "glCreateShader", (uintptr_t)&glCreateShader },
-	{ "glDeleteRenderbuffers", (uintptr_t)&glDeleteRenderbuffers },
 	{ "glDeleteTextures", (uintptr_t)&glDeleteTextures },
 	{ "glDepthFunc", (uintptr_t)&glDepthFunc },
 	{ "glDepthMask", (uintptr_t)&glDepthMask },
@@ -365,8 +397,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glDrawArrays", (uintptr_t)&glDrawArrays },
 	{ "glEnable", (uintptr_t)&glEnable },
 	{ "glEnableVertexAttribArray", (uintptr_t)&glEnableVertexAttribArray },
-	{ "glFramebufferRenderbuffer", (uintptr_t)&glFramebufferRenderbuffer },
-	{ "glGenRenderbuffers", (uintptr_t)&glGenRenderbuffers },
 	{ "glGenTextures", (uintptr_t)&glGenTextures },
 	{ "glGetActiveUniform", (uintptr_t)&glGetActiveUniform },
 	{ "glGetAttribLocation", (uintptr_t)&glGetAttribLocation },
@@ -381,7 +411,6 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glGetUniformLocation", (uintptr_t)&glGetUniformLocation },
 	{ "glIsEnabled", (uintptr_t)&glIsEnabled },
 	{ "glLinkProgram", (uintptr_t)&glLinkProgram },
-	{ "glRenderbufferStorage", (uintptr_t)&glRenderbufferStorage },
 	{ "glScissor", (uintptr_t)&glScissor },
 	{ "glShaderSource", (uintptr_t)&glShaderSource },
 	{ "glTexImage2D", (uintptr_t)&glTexImage2D },
@@ -637,6 +666,11 @@ static so_default_dynlib default_dynlib[] = {
 	{ "sinf", (uintptr_t)&sinf_sfp },
 	{ "th_granule_time", (uintptr_t)&th_granule_time_sfp },
 	{ "vorbis_granule_time", (uintptr_t)&vorbis_granule_time_sfp },
+	{ "glBindRenderbuffer", (uintptr_t)&glBindRenderbuffer },
+	{ "glDeleteRenderbuffers", (uintptr_t)&glDeleteRenderbuffers },
+	{ "glFramebufferRenderbuffer", (uintptr_t)&glFramebufferRenderbuffer },
+	{ "glGenRenderbuffers", (uintptr_t)&glGenRenderbuffers },
+	{ "glRenderbufferStorage", (uintptr_t)&glRenderbufferStorage },
 #else
 	{ "atan", (uintptr_t)&atan },
 	{ "atan2", (uintptr_t)&atan2 },
@@ -653,6 +687,11 @@ static so_default_dynlib default_dynlib[] = {
 	{ "sinf", (uintptr_t)&sinf },
 	{ "th_granule_time", (uintptr_t)&th_granule_time },
 	{ "vorbis_granule_time", (uintptr_t)&vorbis_granule_time },
+	{ "glBindRenderbuffer", (uintptr_t)&ret0 },
+	{ "glDeleteRenderbuffers", (uintptr_t)&ret0 },
+	{ "glFramebufferRenderbuffer", (uintptr_t)&ret0 },
+	{ "glGenRenderbuffers", (uintptr_t)&ret0 },
+	{ "glRenderbufferStorage", (uintptr_t)&ret0 },
 #endif
 };
 
@@ -715,6 +754,11 @@ int main(int argc, char *argv[])
 
 	// make sure that pref folder exists (game saves will fail w/o it)
 	mkdir(DATA_PATH "/pref", 0777);
+
+#if GRAPHICS_API_VITAGL
+	vglSetParamBufferSize(2 * 1024 * 1024);
+	vglUseTripleBuffering(false);
+#endif
 
 	int (* SDL_main)(void) = (void *)so_symbol(&homm3_mod, "SDL_main");
 	SDL_main();

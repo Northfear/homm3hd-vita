@@ -6,7 +6,6 @@
 
 const float CONTROLLER_SPEED_MOD = 2000000.0f;
 const float CONTROLLER_AXIS_SPEEDUP = 1.03f;
-const int32_t CONTROLLER_L_DEADZONE = 3000;
 const int32_t CONTROLLER_R_DEADZONE = 25000;
 const uint32_t CURSOR_REDRAW_INTERVAL = 17;
 const uint32_t MAP_SCROLL_INTERVAL = 100;
@@ -28,6 +27,7 @@ float emulatedPointerPosX = 0;
 float emulatedPointerPosY = 0;
 float gamepadCursorSpeed = 10.f;
 float controllerSpeedBoost = 1.f;
+uint16_t gamepadDeadzone = 3000;
 bool rearTouchEnabled = false;
 float rearTouchCursorSpeed = 5.f;
 uint8_t rearTouchFingerNum = 0;
@@ -144,14 +144,14 @@ void handleControllerAxisEvent(const SDL_ControllerAxisEvent* motion)
 {
 	if (motion->axis == SDL_CONTROLLER_AXIS_LEFTX)
 	{
-		if (abs(motion->value) > CONTROLLER_L_DEADZONE)
+		if (abs(motion->value) > gamepadDeadzone)
 			controllerLeftXAxis = motion->value;
 		else
 			controllerLeftXAxis = 0;
 	}
 	else if (motion->axis == SDL_CONTROLLER_AXIS_LEFTY)
 	{
-		if (abs(motion->value) > CONTROLLER_L_DEADZONE)
+		if (abs(motion->value) > gamepadDeadzone)
 			controllerLeftYAxis = motion->value;
 		else
 			controllerLeftYAxis = 0;
