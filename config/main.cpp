@@ -73,6 +73,7 @@ int gamepad_cursor_speed = 10;
 bool rear_touch_cursor = false;
 int touchpad_cursor_speed = 10;
 int gamepad_deadzone = 3000;
+bool smooth_battle_cursor = false;
 
 void loadConfig(void) {
   char buffer[30];
@@ -87,6 +88,7 @@ void loadConfig(void) {
       if (strcmp("rear_touch_cursor", buffer) == 0) rear_touch_cursor = value;
       if (strcmp("touchpad_cursor_speed", buffer) == 0) touchpad_cursor_speed = value;
       if (strcmp("gamepad_deadzone", buffer) == 0) gamepad_deadzone = value;
+      if (strcmp("smooth_battle_cursor", buffer) == 0) smooth_battle_cursor = value;
     }
     fclose(config);
   }
@@ -101,6 +103,7 @@ void saveConfig(void) {
     fprintf(config, "%s %d\n", "rear_touch_cursor", rear_touch_cursor);
     fprintf(config, "%s %d\n", "touchpad_cursor_speed", touchpad_cursor_speed);
     fprintf(config, "%s %d\n", "gamepad_deadzone", gamepad_deadzone);
+    fprintf(config, "%s %d\n", "smooth_battle_cursor", smooth_battle_cursor);
     fclose(config);
   }
 }
@@ -118,7 +121,8 @@ enum {
   OPT_GAMEPAD_SPEED,
   OPT_REAR_TOUCH,
   OPT_REAR_TOUCH_SPEED,
-  OPT_DEADZONE
+  OPT_DEADZONE,
+  OPT_SMOOTH_BATTLE_CURSOR
 };
 
 char *desc = nullptr;
@@ -180,6 +184,9 @@ int main(int argc, char *argv[]) {
 
     ImGui::Text("Left analog stick deadzone:"); ImGui::SameLine();
     ImGui::SliderInt("##gamepad_deadzone", &gamepad_deadzone, 2000, 10000);
+
+    ImGui::Text("Smooth cursor movement in battles (will result in unit flickering):"); ImGui::SameLine();
+    ImGui::Checkbox("##smooth_battle_cursor", &smooth_battle_cursor);
 
     if (ImGui::Button("Save and Exit"))
       exit_code = 0;

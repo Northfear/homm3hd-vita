@@ -47,6 +47,7 @@ SDL_Window* sdlWindow = NULL;
 SDL_Texture* cursorTexture = NULL;
 SDL_GameController* gameController = NULL;
 int language = 0;
+bool smoothBattleCursor = false;
 
 int (* InputTextMessageHandler)(SDL_Event*);
 int (* MouseMessageHandler)(SDL_Event*);
@@ -74,6 +75,7 @@ void loadConfig(void)
 			if (strcmp("rear_touch_cursor", buffer) == 0) rearTouchEnabled = value;
 			if (strcmp("touchpad_cursor_speed", buffer) == 0) rearTouchCursorSpeed = value;
 			if (strcmp("gamepad_deadzone", buffer) == 0) gamepadDeadzone = value;
+			if (strcmp("smooth_battle_cursor", buffer) == 0) smoothBattleCursor = value;
 		}
 		fclose(config);
 	}
@@ -258,6 +260,11 @@ void dotemu_awardAchievement(uint32_t achievementId)
 
 bool ShouldProcessControllerOnTick()
 {
+	if (smoothBattleCursor)
+	{
+		return true;
+	}
+
 	void *gpCombatManager = *(void **)(homm3_mod.text_base + 0x0037e998);
 	if (gpCombatManager)
 	{

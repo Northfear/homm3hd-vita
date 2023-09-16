@@ -55,7 +55,7 @@ inline void ValidatePointerPosition()
 
 inline void RequestCursorRedraw()
 {
-	// forced screen update results in visual bugs and delayed cursor response during combat
+	// forced screen update results in visual bugs during combat and town view
 	if (ShouldProcessControllerOnTick() && !*dotemu_refreshScreen)
 	{
 		const uint32_t currentTime = SDL_GetTicks();
@@ -83,10 +83,14 @@ void ProcessControllerAxisMotion()
 	const uint32_t deltaTime = currentTime - lastControllerTime;
 	lastControllerTime = currentTime;
 
+	SDL_GameControllerUpdate();
+
 	if (controllerLeftXAxis != 0 || controllerLeftYAxis != 0)
 	{
 		const int16_t xSign = (controllerLeftXAxis > 0) - (controllerLeftXAxis < 0);
 		const int16_t ySign = (controllerLeftYAxis > 0) - (controllerLeftYAxis < 0);
+		const int oldX = emulatedPointerPosX;
+		const int oldY = emulatedPointerPosY;
 
 		float movX = pow(abs(controllerLeftXAxis), CONTROLLER_AXIS_SPEEDUP) * xSign * deltaTime
 						* gamepadCursorSpeed * controllerSpeedBoost / CONTROLLER_SPEED_MOD;
@@ -96,8 +100,12 @@ void ProcessControllerAxisMotion()
 		emulatedPointerPosX += movX;
 		emulatedPointerPosY += movY;
 
-		ValidatePointerPosition();
-		EmulateMouseEvent(SDL_MOUSEMOTION, 0, emulatedPointerPosX, emulatedPointerPosY);
+		if ((abs((int)emulatedPointerPosX - oldX) > 0) || (abs((int)emulatedPointerPosY - oldY) > 0))
+		{
+			ValidatePointerPosition();
+			EmulateMouseEvent(SDL_MOUSEMOTION, 0, emulatedPointerPosX, emulatedPointerPosY);
+		}
+
 		RequestCursorRedraw();
 	}
 
@@ -355,9 +363,9 @@ int mobProcessSDLEvents(void *userdata, SDL_Event *event)
 		case SDL_FINGERMOTION: {
 			if (event->tfinger.touchId == 0)
 			{
-				TouchMessageHandler(event);
 				emulatedPointerPosX = event->tfinger.x * VITA_WIDTH;
 				emulatedPointerPosY = event->tfinger.y * VITA_HEIGHT;
+				TouchMessageHandler(event);
 
 				if (event->type == SDL_FINGERDOWN)
 				{
