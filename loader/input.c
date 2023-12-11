@@ -100,7 +100,7 @@ void ProcessControllerAxisMotion()
 		emulatedPointerPosX += movX;
 		emulatedPointerPosY += movY;
 
-		if ((abs((int)emulatedPointerPosX - oldX) > 0) || (abs((int)emulatedPointerPosY - oldY) > 0))
+		if (((int)emulatedPointerPosX != oldX) || ((int)emulatedPointerPosY != oldY))
 		{
 			ValidatePointerPosition();
 			EmulateMouseEvent(SDL_MOUSEMOTION, 0, emulatedPointerPosX, emulatedPointerPosY);
@@ -273,7 +273,6 @@ void handleControllerButtonEvent(SDL_ControllerButtonEvent* button)
 		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
 			break;
 		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			break;
 			break;
 		default:
 			break;
