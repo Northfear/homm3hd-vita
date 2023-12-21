@@ -27,6 +27,7 @@ In order to properly install the game, you'll have to follow these steps precise
   ur0:tai/kubridge.skprx
   ur0:tai/fd_fix.skprx
 ```
+- (Optional, but recommended) Install [NoTrpDrm](https://github.com/Rinnegatamante/NoTrpDrm) to enable trophies support.
 
 **Note** Don't install fd_fix.skprx if you're using the rePatch plugin!
 
