@@ -7,52 +7,6 @@
 
 extern "C" {
 int _newlib_heap_size_user = 256 * 1024 * 1024;
-
-void __real_free(void* ptr);
-void *__real_malloc(size_t size);
-void *__real_calloc(size_t num, size_t size);
-void *__real_memalign(size_t alignment, size_t size);
-void *__real_realloc(void *ptr, size_t size);
-
-void *__wrap_memcpy(void *dest, const void *src, size_t n)
-{
-	return sceClibMemcpy(dest, src, n);
-}
-
-void *__wrap_memmove(void *dest, const void *src, size_t n)
-{
-	return sceClibMemmove(dest, src, n);
-}
-
-void *__wrap_memset(void *s, int c, size_t n)
-{
-	return sceClibMemset(s, c, n);
-}
-
-void __wrap_free(void* ptr)
-{
-	__real_free(ptr);
-}
-
-void *__wrap_malloc(size_t size)
-{
-	return __real_malloc(size);
-}
-
-void *__wrap_calloc(size_t num, size_t size)
-{
-	return __real_calloc(num, size);
-}
-
-void *__wrap_memalign(size_t alignment, size_t size)
-{
-	return __real_memalign(alignment, size);
-}
-
-void *__wrap_realloc(void *ptr, size_t size)
-{
-	return __real_realloc(ptr, size);
-}
 }
 
 #define CONFIG_FILE_PATH "ux0:data/homm3hd/config.txt"

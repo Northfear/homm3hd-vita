@@ -25,7 +25,6 @@
 #include "so_util.h"
 #include "reimpl/pthr.h"
 #include "reimpl/other.h"
-#include "reimpl/memory.h"
 #include "utils/dialog.h"
 #include "utils/utils.h"
 #include "utils/trophies.h"
@@ -720,8 +719,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	init_memory();
-
 	scePowerSetArmClockFrequency(444);
 	scePowerSetBusClockFrequency(222);
 	scePowerSetGpuClockFrequency(222);
@@ -774,8 +771,6 @@ int main(int argc, char *argv[])
 	{
 		SDL_DestroyTexture(cursorTexture);
 	}
-
-	term_memory();
 
 	return 0;
 }

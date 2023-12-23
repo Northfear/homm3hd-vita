@@ -20,13 +20,16 @@ The port has been tested only with the latest available version of the game (whi
 
 In order to properly install the game, you'll have to follow these steps precisely:
 
-- Install [kubridge](https://github.com/TheOfficialFloW/kubridge/releases/) and [FdFix](https://github.com/TheOfficialFloW/FdFix/releases/) by copying `kubridge.skprx` and `fd_fix.skprx` to your taiHEN plugins folder (usually `ur0:tai`) and adding two entries to your `config.txt` under `*KERNEL`:
+- Install [kubridge](https://github.com/bythos14/kubridge/releases/) and [FdFix](https://github.com/TheOfficialFloW/FdFix/releases/) by copying `kubridge.skprx` and `fd_fix.skprx` to your taiHEN plugins folder (usually `ur0:tai`) and adding two entries to your `config.txt` under `*KERNEL`:
  
 ```
   *KERNEL
   ur0:tai/kubridge.skprx
   ur0:tai/fd_fix.skprx
 ```
+
+- Install ```libshacccg.suprx```, if you don't have it already, by following [this guide](https://cimmerian.gitbook.io/vita-troubleshooting-guide/shader-compiler/extract-libshacccg.suprx).
+
 - (Optional, but recommended) Install [NoTrpDrm](https://github.com/Rinnegatamante/NoTrpDrm) to enable trophies support.
 
 **Note** Don't install fd_fix.skprx if you're using the rePatch plugin!

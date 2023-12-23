@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 
 void ProcessControllerAxisMotion();
+void ValidatePointerPosition();
+void RequestCursorRedraw();
 void handleControllerAxisEvent(const SDL_ControllerAxisEvent* motion);
 void handleControllerButtonEvent(SDL_ControllerButtonEvent* button);
 int mobProcessSDLEvents(void *userdata, SDL_Event *event);

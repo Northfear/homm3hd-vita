@@ -15,15 +15,13 @@ set(VITA_TITLEID  "HOMM00003")
 set(VITA_VERSION  "01.22")
 set(VITA_MKSFOEX_FLAGS "-d ATTRIBUTE2=12")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -Wno-strict-aliasing \
-                  -Wl,-q,--wrap,memcpy,--wrap,memmove,--wrap,memset,--wrap,free,--wrap,malloc,--wrap,calloc,--wrap,realloc,--wrap,memalign")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -Wno-strict-aliasing")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11")
 
 add_executable(HOMM3.elf
   loader/main.c
   loader/input.c
   loader/so_util.c
-  loader/reimpl/memory.c
   loader/reimpl/pthr.c
   loader/reimpl/other.c
   loader/utils/dialog.c
