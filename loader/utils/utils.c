@@ -45,6 +45,11 @@ int check_module(char *module_name) {
     return _vshKernelSearchModuleByName(module_name, search_unk);
 }
 
+int file_exists(const char *path) {
+	SceIoStat stat;
+	return sceIoGetstat(path, &stat) >= 0;
+}
+
 SDL_Texture* loadSDLTexture(char *path, SDL_Renderer *renderer)
 {
 	SDL_Texture* newTexture = NULL;

@@ -729,6 +729,13 @@ int main(int argc, char *argv[])
 		fatal_error("Error kubridge.skprx is not installed.");
 	}
 
+#if GRAPHICS_API_VITAGL
+	if (!file_exists("ur0:/data/libshacccg.suprx") && !file_exists("ur0:/data/external/libshacccg.suprx"))
+	{
+		fatal_error("Error libshacccg.suprx is not installed.");
+	}
+#endif
+
 #if GRAPHICS_API_PVR
 	if (check_module("libgpu_es4_kernel_ext") < 0)
 	{
