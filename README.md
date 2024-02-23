@@ -81,7 +81,7 @@ In order to build the loader, you'll need a softfp [vitasdk](https://github.com/
 
 - [vitaGL](https://github.com/Rinnegatamante/vitaGL)
 
-```make HAVE_GLSL_SUPPORT=1 SOFTFP_ABI=1 SINGLE_THREADED_GC=1 install```
+```make HAVE_GLSL_SUPPORT=1 SOFTFP_ABI=1 SINGLE_THREADED_GC=1 HAVE_SHADER_CACHE=1 install```
 
 - [SDL2 fork](https://github.com/Northfear/SDL/tree/vita-2.0.9-h3hd)
 

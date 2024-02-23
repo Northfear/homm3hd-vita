@@ -12,7 +12,7 @@ project(HOMM3.elf C CXX)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 set(VITA_APP_NAME "Heroes of Might and Magic 3 HD")
 set(VITA_TITLEID  "HOMM00003")
-set(VITA_VERSION  "01.22")
+set(VITA_VERSION  "01.23")
 set(VITA_MKSFOEX_FLAGS "-d ATTRIBUTE2=12")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -O3 -Wno-strict-aliasing")
